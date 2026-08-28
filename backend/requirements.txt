@@ -1,0 +1,14 @@
+# Smart Vehicles connect AI - Backend Dependencies
+fastapi==0.104.1
+uvicorn[standard]==0.24.0
+pydantic==2.13.4
+pydantic-settings==2.15.0
+websockets==12.0
+sqlalchemy==2.0.23
+opencv-python==4.8.1.78
+dlib-bin==20.0.1
+imutils==0.5.4
+mediapipe==0.10.8
+numpy==1.26.2
+python-dotenv==1.0.0
+httpx==0.25.0

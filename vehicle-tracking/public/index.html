@@ -1,0 +1,313 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta name="viewport"
+          content="width=device-width, initial-scale=1.0">
+
+    <title>Vehicle Tracking System</title>
+
+    <link
+        rel="stylesheet"
+        href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+    />
+
+    <style>
+
+        body {
+            margin: 0;
+            font-family: Arial, sans-serif;
+            background: #111;
+            color: white;
+        }
+
+        header {
+            padding: 15px;
+            background: #222;
+            text-align: center;
+        }
+
+        #map {
+            height: 70vh;
+            width: 100%;
+        }
+
+        .dashboard {
+            padding: 15px;
+            display: grid;
+            grid-template-columns:
+                repeat(auto-fit, minmax(150px, 1fr));
+            gap: 10px;
+        }
+
+        .card {
+            background: #222;
+            padding: 15px;
+            border-radius: 10px;
+            text-align: center;
+        }
+
+        .card.alert {
+            background: #7f1d1d;
+            border: 2px solid #ef4444;
+            animation: pulse 1s infinite alternate;
+        }
+
+        @keyframes pulse {
+            from { opacity: 0.8; }
+            to { opacity: 1; }
+        }
+
+        .value {
+            font-size: 20px;
+            margin-top: 8px;
+            font-weight: bold;
+        }
+
+        #status {
+            font-weight: bold;
+        }
+
+    </style>
+
+</head>
+
+
+<body>
+
+<header>
+
+    <h2>🚗 Real-Time Vehicle Tracking</h2>
+
+    <div id="status">
+        Connecting...
+    </div>
+
+</header>
+
+
+<div id="map"></div>
+
+
+<div class="dashboard">
+
+    <div class="card">
+        Latitude
+        <div id="latitude" class="value">--</div>
+    </div>
+
+    <div class="card">
+        Longitude
+        <div id="longitude" class="value">--</div>
+    </div>
+
+    <div class="card">
+        X Acceleration
+        <div id="ax" class="value">--</div>
+    </div>
+
+    <div class="card">
+        Y Acceleration
+        <div id="ay" class="value">--</div>
+    </div>
+
+    <div class="card">
+        Z Acceleration
+        <div id="az" class="value">--</div>
+    </div>
+
+    <div class="card">
+        Total G
+        <div id="totalG" class="value">--</div>
+    </div>
+
+    <div className="card" id="emergencyCard" class="card">
+        Emergency Status
+        <div id="emergency" class="value">
+            NORMAL
+        </div>
+    </div>
+
+</div>
+
+
+<script
+    src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js">
+</script>
+
+
+<script>
+
+let map = L.map("map").setView(
+    [20, 78],
+    5
+);
+
+
+L.tileLayer(
+    "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
+    {
+        maxZoom: 19,
+        attribution: "&copy; OpenStreetMap"
+    }
+).addTo(map);
+
+
+let vehicleMarker = null;
+
+
+// =====================================================
+// UPDATE VEHICLE
+// =====================================================
+
+async function updateVehicle() {
+
+    try {
+
+        const response =
+            await fetch("/api/vehicle");
+
+        const data =
+            await response.json();
+
+
+        // GPS
+        if (
+            data.latitude !== null &&
+            data.longitude !== null
+        ) {
+
+            const position = [
+                data.latitude,
+                data.longitude
+            ];
+
+
+            if (vehicleMarker === null) {
+
+                vehicleMarker =
+                    L.marker(position)
+                    .addTo(map)
+                    .bindPopup(
+                        "🚗 Vehicle Location"
+                    );
+
+                map.setView(
+                    position,
+                    17
+                );
+
+            } else {
+
+                vehicleMarker
+                    .setLatLng(position);
+
+            }
+
+        }
+
+
+        // Display GPS
+        document.getElementById(
+            "latitude"
+        ).innerText =
+            data.latitude ?? "--";
+
+
+        document.getElementById(
+            "longitude"
+        ).innerText =
+            data.longitude ?? "--";
+
+
+        // MPU6500
+        document.getElementById(
+            "ax"
+        ).innerText =
+            Number(data.ax || 0).toFixed(2) + " g";
+
+
+        document.getElementById(
+            "ay"
+        ).innerText =
+            Number(data.ay || 0).toFixed(2) + " g";
+
+
+        document.getElementById(
+            "az"
+        ).innerText =
+            Number(data.az || 0).toFixed(2) + " g";
+
+
+        document.getElementById(
+            "totalG"
+        ).innerText =
+            Number(data.totalG || 0).toFixed(2) + " g";
+
+
+        // Emergency
+        const emergency =
+            document.getElementById(
+                "emergency"
+            );
+        const emergencyCard =
+            document.getElementById(
+                "emergencyCard"
+            );
+
+
+        if (data.emergency || data.impact) {
+
+            emergency.innerText =
+                "🚨 EMERGENCY / IMPACT";
+            emergency.style.color = "#f87171";
+            if (emergencyCard) emergencyCard.classList.add("alert");
+
+        } else {
+
+            emergency.innerText =
+                "NORMAL";
+            emergency.style.color = "#4ade80";
+            if (emergencyCard) emergencyCard.classList.remove("alert");
+
+        }
+
+
+        document.getElementById(
+            "status"
+        ).innerText =
+            "🟢 SYSTEM ONLINE";
+
+    }
+
+    catch (error) {
+
+        console.error(error);
+
+        document.getElementById(
+            "status"
+        ).innerText =
+            "🔴 SERVER ERROR";
+
+    }
+
+}
+
+
+// Update every 500 ms
+setInterval(
+    updateVehicle,
+    500
+);
+
+
+updateVehicle();
+
+</script>
+
+</body>
+
+</html>

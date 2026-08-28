@@ -1,0 +1,16 @@
+{
+  "name": "vehicle-tracking",
+  "version": "1.0.0",
+  "description": "Real-Time Vehicle Tracking & Sensor Data Server",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "@google-cloud/text-to-speech": "^7.0.0",
+    "axios": "^1.19.0",
+    "cors": "^2.8.5",
+    "dotenv": "^17.4.2",
+    "express": "^4.19.2"
+  }
+}
